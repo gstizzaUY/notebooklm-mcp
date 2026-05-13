@@ -33,6 +33,7 @@ export interface Config {
 
   // Browser Settings
   headless: boolean;
+  noSandbox: boolean;
   browserTimeout: number;
   /**
    * Hard ceiling on the wait for a NotebookLM answer (issue #14 + #27).
@@ -94,6 +95,7 @@ const DEFAULTS: Config = {
 
   // Browser Settings
   headless: true,
+  noSandbox: false,
   browserTimeout: 30000,
   answerTimeoutMs: 600000, // 10 minutes — was hardcoded 120 s (issue #14)
   // CRITICAL: NotebookLM switches to a tab-based mobile layout below
@@ -196,6 +198,7 @@ function applyEnvOverrides(config: Config): Config {
     // Override with env vars if present
     notebookUrl: process.env.NOTEBOOK_URL || config.notebookUrl,
     headless: parseBoolean(process.env.HEADLESS, config.headless),
+    noSandbox: parseBoolean(process.env.CHROME_NO_SANDBOX, config.noSandbox),
     browserTimeout: parseInteger(process.env.BROWSER_TIMEOUT, config.browserTimeout),
     answerTimeoutMs: parseInteger(process.env.ANSWER_TIMEOUT_MS, config.answerTimeoutMs),
     maxSessions: parseInteger(process.env.MAX_SESSIONS, config.maxSessions),

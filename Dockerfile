@@ -14,33 +14,6 @@ RUN npm run build
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
 FROM node:20-slim AS runtime
 
-# Chrome / Chromium runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    chromium \
-    chromium-sandbox \
-    fonts-liberation \
-    fonts-noto-color-emoji \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libcups2 \
-    libdbus-1-3 \
-    libdrm2 \
-    libgbm1 \
-    libgtk-3-0 \
-    libnspr4 \
-    libnss3 \
-    libx11-6 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxrandr2 \
-    libxshmfence1 \
-    wget \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
 # Copy build output and production deps
@@ -48,23 +21,26 @@ COPY --from=builder /app/dist ./dist
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-# Tell Patchright to use the system Chromium instead of downloading its own
-ENV BROWSER_CHANNEL=chromium
-ENV PATCHRIGHT_SKIP_BROWSER_DOWNLOAD=1
+# Install Patchright's bundled Chromium and all its OS-level dependencies.
+# --with-deps handles everything (fonts, nss, libgbm, etc.) automatically.
+RUN npx patchright install chromium --with-deps
 
-# Use HTTP transport so Easypanel can route requests
+# ── Transport ─────────────────────────────────────────────────────────────────
+# Use HTTP transport so Easypanel can route requests to the MCP endpoint.
 ENV NOTEBOOKLM_TRANSPORT=http
 ENV NOTEBOOKLM_PORT=3000
 ENV NOTEBOOKLM_HOST=0.0.0.0
 
-# Run headless (no display required at runtime after auth is set up)
+# ── Browser ───────────────────────────────────────────────────────────────────
+# Use the Patchright bundled Chromium (no system Chrome required).
+ENV BROWSER_CHANNEL=chromium
+# Headless mode (required in containers without a display server).
 ENV HEADLESS=true
+# Docker containers run without kernel namespaces for Chrome sandboxing.
+# CHROME_NO_SANDBOX=true adds --no-sandbox and --disable-setuid-sandbox to
+# the browser launch args (handled in shared-context-manager.ts).
+ENV CHROME_NO_SANDBOX=true
 
 EXPOSE 3000
-
-# Run as non-root for security (Chrome sandbox still works with --no-sandbox)
-RUN groupadd -r appuser && useradd -r -g appuser -d /app appuser \
-    && chown -R appuser:appuser /app
-USER appuser
 
 CMD ["node", "dist/index.js"]

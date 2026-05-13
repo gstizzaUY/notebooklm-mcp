@@ -938,6 +938,7 @@ export class AuthManager {
           "--disable-dev-shm-usage",
           "--no-first-run",
           "--no-default-browser-check",
+          ...(CONFIG.noSandbox ? ["--no-sandbox", "--disable-setuid-sandbox"] : []),
         ],
       };
       const preferred = getPreferredChannel();
