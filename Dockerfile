@@ -21,7 +21,8 @@ WORKDIR /app
 # Copy build output and production deps
 COPY --from=builder /app/dist ./dist
 COPY package*.json ./
-RUN npm ci --omit=dev
+# --ignore-scripts prevents the "prepare" hook from running tsc (devDep, not available here).
+RUN npm ci --omit=dev --ignore-scripts
 
 # Install Patchright's bundled Chromium and all its OS-level dependencies.
 # --with-deps handles everything (fonts, nss, libgbm, etc.) automatically.
