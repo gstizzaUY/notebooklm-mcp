@@ -100,7 +100,10 @@ async function handleRequest(
 ): Promise<void> {
   const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
 
-  if (url.pathname === "/healthz" && req.method === "GET") {
+  if (
+    (url.pathname === "/healthz" || url.pathname === "/" || url.pathname === "/health") &&
+    req.method === "GET"
+  ) {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ status: "ok", protocol: "mcp-streamable-http" }));
     return;
