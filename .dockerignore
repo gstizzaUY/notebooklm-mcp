@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.env
+.env.local
+data/
+browser_state/
+chrome_profile/
+.notebooklm-mcp/
