@@ -4,7 +4,9 @@ FROM node:20-slim AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+# --ignore-scripts skips the "prepare" hook (which runs tsc) so the build
+# doesn't fail because src/ hasn't been copied yet at this stage.
+RUN npm ci --ignore-scripts
 
 COPY tsconfig.json ./
 COPY src/ ./src/
